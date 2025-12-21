@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
     <style>
         body {
             font-family: 'Cairo', sans-serif;
@@ -14,490 +17,532 @@
             background-color: #f4f9f6;
             overflow-x: hidden;
         }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #217346; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: #1a5c38; }
+
         .excel-green { color: #217346; }
         .bg-excel-green { background-color: #217346; }
         .bg-excel-gradient {
             background: linear-gradient(135deg, #217346 0%, #1a5c38 100%);
         }
         .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(33, 115, 70, 0.1);
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        .glass-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 25px 50px -12px rgba(33, 115, 70, 0.25);
+            border-color: #217346;
+        }
+
         .grid-pattern {
             background-image: linear-gradient(#e2e8f0 1px, transparent 1px), linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
-            background-size: 25px 25px;
+            background-size: 30px 30px;
         }
+
+        /* Animations */
         @keyframes bounce-slow {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
+            50% { transform: translateY(-20px); }
         }
-        .bounce-element { animation: bounce-slow 4s infinite ease-in-out; }
-        .hover-lift { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .hover-lift:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .bounce-element { animation: bounce-slow 3s infinite ease-in-out; }
         
-        /* Timeline specific styles RESPONSIVE */
-        .timeline-container::before {
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(33, 115, 70, 0.2); }
+            50% { box-shadow: 0 0 30px rgba(33, 115, 70, 0.6); }
+        }
+        .pulse-glow { animation: pulse-glow 2s infinite; }
+
+        /* Timeline Connector Animation */
+        .timeline-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #e2e8f0;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .timeline-line::after {
             content: '';
             position: absolute;
             top: 0;
-            right: 20px;
-            height: 100%;
-            width: 4px;
-            background: #217346;
-            opacity: 0.2;
-            border-radius: 10px;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(to bottom, transparent, #217346, transparent);
+            animation: move-line 3s infinite linear;
         }
+        @keyframes move-line {
+            0% { top: -50%; }
+            100% { top: 150%; }
+        }
+
+        /* Responsive Timeline */
+        .timeline-line { right: 28px; }
         @media (min-width: 768px) {
-            .timeline-container::before {
-                right: 50%;
-                margin-right: -2px;
-            }
+            .timeline-line { right: 50%; margin-right: -2px; }
         }
-        .sub-topic-item {
-            position: relative;
-            padding-right: 1.5rem;
+
+        /* Progress Bar */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #217346, #4ade80);
+            z-index: 9999;
+            width: 0%;
+            transition: width 0.1s ease-out;
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
         }
+        
+        .sub-topic-item { position: relative; padding-right: 1.5rem; transition: transform 0.2s; }
+        .sub-topic-item:hover { transform: translateX(-5px); color: #217346; font-weight: bold; }
         .sub-topic-item::before {
-            content: '•';
-            position: absolute;
-            right: 0;
-            color: #217346;
-            font-weight: bold;
+            content: '•'; position: absolute; right: 0; color: #217346; font-weight: bold;
         }
     </style>
 </head>
 <body class="text-slate-800">
 
-    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-emerald-200 shadow-sm transition-all duration-300">
+    <div id="progress-bar"></div>
+
+    <nav class="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-emerald-100 transition-all duration-300" data-aos="fade-down" data-aos-duration="1000">
         <div class="max-w-7xl mx-auto px-4 md:px-6 flex justify-between h-20 items-center">
-            <div class="flex items-center gap-2 md:gap-3 z-50">
-                <div class="bg-excel-green p-2 rounded-xl text-white shadow-lg shrink-0">
+            <div class="flex items-center gap-2 md:gap-3 z-50 hover:scale-105 transition-transform cursor-pointer">
+                <div class="bg-excel-green p-2 rounded-xl text-white shadow-lg shrink-0 pulse-glow">
                     <i data-lucide="table-2" class="w-6 h-6 md:w-7 md:h-7"></i>
                 </div>
                 <span class="text-xl md:text-2xl font-black excel-green tracking-tight"> إكسل مع باسل</span>
             </div>
 
             <div class="hidden md:flex gap-8 font-bold text-lg items-center">
-                <a href="#instructor" class="hover:text-emerald-600 transition">مين المدرب؟</a>
-                <a href="#plan" class="hover:text-emerald-600 transition">نظام الدورة</a>
-                <a href="#stages" class="hover:text-emerald-600 transition">خارطة الطريق</a>
-                <a href="#exam" class="bg-excel-green text-white px-6 py-2 rounded-full hover:bg-emerald-700 transition shadow-md hover:scale-105">يلا ؟</a>
+                <a href="#instructor" class="hover:text-emerald-600 transition hover:-translate-y-1 inline-block">مين المدرب؟</a>
+                <a href="#plan" class="hover:text-emerald-600 transition hover:-translate-y-1 inline-block">نظام الدورة</a>
+                <a href="#stages" class="hover:text-emerald-600 transition hover:-translate-y-1 inline-block">خارطة الطريق</a>
+                <a href="#exam" class="bg-excel-green text-white px-6 py-2 rounded-full hover:bg-emerald-700 transition shadow-lg hover:shadow-emerald-500/50 hover:scale-110 active:scale-95 duration-300">يلا ؟</a>
             </div>
 
-            <button id="mobile-menu-btn" class="md:hidden text-slate-700 hover:text-excel-green focus:outline-none z-50 p-2">
+            <button id="mobile-menu-btn" class="md:hidden text-slate-700 hover:text-excel-green focus:outline-none z-50 p-2 transform transition hover:rotate-180 duration-500">
                 <i data-lucide="menu" class="w-8 h-8"></i>
             </button>
         </div>
 
-        <div id="mobile-menu" class="hidden absolute top-0 left-0 w-full bg-white h-screen flex flex-col items-center justify-center gap-8 text-xl font-bold shadow-xl transition-all z-40">
-            <a href="#instructor" class="mobile-link hover:text-excel-green">مين المدرب؟</a>
-            <a href="#plan" class="mobile-link hover:text-excel-green">نظام الدورة</a>
-            <a href="#stages" class="mobile-link hover:text-excel-green">خارطة الطريق</a>
-            <a href="#exam" class="bg-excel-green text-white px-10 py-3 rounded-full shadow-lg">بلش هسا</a>
+        <div id="mobile-menu" class="hidden absolute top-0 left-0 w-full bg-white/98 backdrop-blur-xl h-screen flex flex-col items-center justify-center gap-8 text-xl font-bold z-40 origin-top transform transition-all duration-300">
+            <a href="#instructor" class="mobile-link hover:text-excel-green scale-100 hover:scale-125 transition" data-aos="fade-up" data-aos-delay="100">مين المدرب؟</a>
+            <a href="#plan" class="mobile-link hover:text-excel-green scale-100 hover:scale-125 transition" data-aos="fade-up" data-aos-delay="200">نظام الدورة</a>
+            <a href="#stages" class="mobile-link hover:text-excel-green scale-100 hover:scale-125 transition" data-aos="fade-up" data-aos-delay="300">خارطة الطريق</a>
+            <a href="#exam" class="bg-excel-green text-white px-10 py-3 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition" data-aos="zoom-in" data-aos-delay="400">بلش هسا</a>
             
-            <button id="close-menu-btn" class="absolute top-6 right-6 text-slate-400">
+            <button id="close-menu-btn" class="absolute top-6 right-6 text-slate-400 hover:text-red-500 transition hover:rotate-90">
                 <i data-lucide="x" class="w-8 h-8"></i>
             </button>
         </div>
     </nav>
 
-    <header class="relative overflow-hidden bg-excel-gradient text-white pt-16 pb-24 md:pt-24 md:pb-40">
-        <div class="absolute inset-0 opacity-10 grid-pattern"></div>
+    <header class="relative overflow-hidden bg-excel-gradient text-white min-h-[90vh] flex flex-col justify-center pt-10 pb-20">
+        <div class="absolute inset-0 opacity-10 grid-pattern" data-aos="zoom-out" data-aos-duration="3000"></div>
+        
+        <div class="absolute top-20 left-10 opacity-20 bounce-element" style="animation-duration: 4s"><i data-lucide="file-spreadsheet" class="w-20 h-20"></i></div>
+        <div class="absolute bottom-40 right-10 opacity-20 bounce-element" style="animation-duration: 6s"><i data-lucide="pie-chart" class="w-16 h-16"></i></div>
+
         <div class="max-w-7xl mx-auto px-4 relative z-10 text-center">
-            <div class="bounce-element mb-6 md:mb-8 inline-block bg-white/20 p-4 md:p-5 rounded-3xl backdrop-blur-md border border-white/30">
+            <div class="bounce-element mb-6 inline-block bg-white/20 p-5 rounded-full backdrop-blur-md border border-white/30 shadow-[0_0_30px_rgba(255,255,255,0.3)]" data-aos="zoom-in" data-aos-delay="200">
                 <i data-lucide="rocket" class="w-12 h-12 md:w-16 md:h-16 text-yellow-300"></i>
             </div>
-            <h1 class="text-4xl md:text-7xl font-extrabold mb-4 md:mb-6 leading-tight">بدك تصير "وحش" بالإكسل؟</h1>
-            <p class="text-xl md:text-3xl text-emerald-100 mb-8 md:mb-10 max-w-3xl mx-auto font-light leading-relaxed">
-                فُكك من الطرق القديمة، وتعال اتعلم صح مع الخبير <span class="font-bold text-white underline decoration-yellow-400 decoration-4">باسل غانم</span>. رح نخليك تختم الإكسل من الآخر!
+            
+            <h1 class="text-5xl md:text-8xl font-extrabold mb-6 leading-tight" data-aos="fade-up" data-aos-delay="400">
+                بدك تصير <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500">"وحش"</span> بالإكسل؟
+            </h1>
+            
+            <p class="text-xl md:text-3xl text-emerald-100 mb-10 max-w-3xl mx-auto font-light leading-relaxed" data-aos="fade-up" data-aos-delay="600">
+                فُكك من الطرق القديمة، وتعال اتعلم صح مع الخبير <span class="font-bold text-white underline decoration-yellow-400 decoration-4 cursor-pointer hover:text-yellow-300 transition">باسل غانم</span>. رح نخليك تختم الإكسل من الآخر!
             </p>
-            <div class="flex flex-col md:flex-row justify-center gap-4 md:gap-6">
-                <div class="bg-white/15 px-6 py-4 rounded-2xl border border-white/20 backdrop-blur-lg shadow-xl w-full md:w-auto">
-                    <p class="text-xs opacity-70 uppercase tracking-widest mb-1">المستوى المطلوب</p>
+            
+            <div class="flex flex-col md:flex-row justify-center gap-4 md:gap-6" data-aos="fade-up" data-aos-delay="800">
+                <div class="group bg-white/10 hover:bg-white/20 px-6 py-4 rounded-2xl border border-white/20 backdrop-blur-lg shadow-xl w-full md:w-auto transition-all duration-300 cursor-default hover:scale-105">
+                    <p class="text-xs opacity-70 uppercase tracking-widest mb-1 group-hover:text-yellow-300 transition">المستوى المطلوب</p>
                     <p class="text-lg md:text-xl font-bold italic">من الصفر للاحتراف (Expert)</p>
                 </div>
-                <div class="bg-white/15 px-6 py-4 rounded-2xl border border-white/20 backdrop-blur-lg shadow-xl w-full md:w-auto">
-                    <p class="text-xs opacity-70 uppercase tracking-widest mb-1">اعتماد المدرب الرسمي</p>
+                <div class="group bg-white/10 hover:bg-white/20 px-6 py-4 rounded-2xl border border-white/20 backdrop-blur-lg shadow-xl w-full md:w-auto transition-all duration-300 cursor-default hover:scale-105">
+                    <p class="text-xs opacity-70 uppercase tracking-widest mb-1 group-hover:text-yellow-300 transition">اعتماد المدرب الرسمي</p>
                     <p class="text-lg md:text-xl font-bold">Microsoft Office Specialist</p>
                 </div>
             </div>
         </div>
+
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 text-white/50 animate-bounce cursor-pointer" onclick="document.getElementById('instructor').scrollIntoView()">
+            <p class="text-sm font-bold mb-2">بلش الرحلة</p>
+            <i data-lucide="chevron-down" class="w-8 h-8 mx-auto"></i>
+        </div>
     </header>
 
-    <section id="instructor" class="-mt-16 md:-mt-20 max-w-6xl mx-auto px-4 md:px-6 relative z-20">
-        <div class="glass-card rounded-3xl md:rounded-[3rem] p-6 md:p-10 shadow-2xl flex flex-col md:flex-row items-center gap-6 md:gap-10 border-t-8 border-excel-green">
-            <div class="relative shrink-0">
+    <section id="instructor" class="-mt-16 md:-mt-20 max-w-6xl mx-auto px-4 md:px-6 relative z-20 overflow-hidden">
+        <div class="glass-card rounded-3xl md:rounded-[3rem] p-6 md:p-10 shadow-2xl flex flex-col md:flex-row items-center gap-6 md:gap-10 border-t-8 border-excel-green" data-aos="flip-up" data-aos-duration="1000">
+            <div class="relative shrink-0 group perspective-1000" data-aos="zoom-in-right" data-aos-delay="300">
+                <div class="absolute inset-0 bg-excel-green rounded-[2rem] rotate-6 opacity-30 group-hover:rotate-12 transition-transform duration-500"></div>
                 <img 
                     src="https://voxoura.com/media/user_images/Basel_Ghanem.jpg" 
                     alt="المدرب باسل غانم" 
-                    class="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] object-cover rotate-3 shadow-xl border-4 border-white ring-4 ring-emerald-100"
+                    class="relative w-32 h-32 md:w-48 md:h-48 rounded-[2rem] object-cover shadow-2xl border-4 border-white ring-4 ring-emerald-100 transform transition duration-500 group-hover:scale-110 group-hover:rotate-3"
                 >
-                <div class="absolute -bottom-2 -right-2 bg-yellow-400 text-slate-900 px-3 py-1 rounded-lg font-bold text-xs md:text-sm shadow-md -rotate-3 z-10">
+                <div class="absolute -bottom-4 -right-4 bg-yellow-400 text-slate-900 px-4 py-2 rounded-xl font-black text-xs md:text-sm shadow-xl -rotate-6 z-10 animate-pulse">
                     Microsoft Expert
                 </div>
             </div>
-            <div class="text-center md:text-right">
-                <h2 class="text-2xl md:text-3xl font-black mb-4 underline decoration-excel-green/30 decoration-8 underline-offset-4">عن المدرب باسل غانم</h2>
-                <p class="text-lg md:text-xl text-slate-600 leading-relaxed mb-6">
-                     متخصص ومعتمد من مايكروسوفت شخصياً. عمل اكثر من 200 دورة اكسل ، والمستفيدين اكثر من 2000 شخص."
+            <div class="text-center md:text-right" data-aos="fade-left" data-aos-delay="500">
+                <h2 class="text-2xl md:text-4xl font-black mb-4 underline decoration-excel-green/30 decoration-8 underline-offset-4">عن المدرب باسل غانم</h2>
+                <p class="text-lg md:text-xl text-slate-600 leading-relaxed mb-8">
+                     "متخصص ومعتمد من مايكروسوفت شخصياً. مش بس مدرب، أنا شريكك بالنجاح. عملت اكثر من <span class="font-bold text-excel-green text-2xl">200</span> دورة، وساعدت أكثر من <span class="font-bold text-excel-green text-2xl">2000</span> شخص يغيروا حياتهم المهنية."
                 </p>
                 <div class="flex justify-center md:justify-start gap-2 md:gap-4 text-center text-sm md:text-base">
-                    <div class="flex-1 md:flex-none px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100 font-bold text-excel-green">أساسي</div>
-                    <div class="flex-1 md:flex-none px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100 font-bold text-emerald-600">متوسط</div>
-                    <div class="flex-1 md:flex-none px-4 py-2 bg-emerald-600 rounded-xl border border-emerald-500 font-bold text-white shadow-lg">محترف</div>
+                    <div class="flex-1 md:flex-none px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100 font-bold text-excel-green hover:bg-excel-green hover:text-white transition duration-300 cursor-default shadow-sm hover:shadow-lg transform hover:-translate-y-1">أساسي</div>
+                    <div class="flex-1 md:flex-none px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100 font-bold text-emerald-600 hover:bg-emerald-600 hover:text-white transition duration-300 cursor-default shadow-sm hover:shadow-lg transform hover:-translate-y-1">متوسط</div>
+                    <div class="flex-1 md:flex-none px-6 py-2 bg-emerald-600 rounded-xl border border-emerald-500 font-bold text-white shadow-lg shadow-emerald-200 transform hover:scale-110 transition duration-300">محترف</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="plan" class="py-16 md:py-24 max-w-7xl mx-auto px-4 md:px-6">
-        <div class="text-center mb-10 md:mb-16">
-            <h2 class="text-3xl md:text-4xl font-black mb-4">كيف تجيب الشهادة وتبيّض الوجه؟</h2>
-            <p class="text-lg md:text-xl text-slate-500">لازم تجمع 100 علامة عشان تاخذ "شهادة التميز" وتفرح الوالدة</p>
+    <section id="plan" class="py-16 md:py-32 max-w-7xl mx-auto px-4 md:px-6">
+        <div class="text-center mb-16" data-aos="fade-up">
+            <h2 class="text-3xl md:text-5xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-l from-slate-900 to-slate-600">كيف تجيب الشهادة وتبيّض الوجه؟</h2>
+            <p class="text-lg md:text-2xl text-slate-500">مهمة تجميع الـ 100 علامة (Game On!)</p>
         </div>
 
-        <div class="grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
+        <div class="grid lg:grid-cols-2 gap-10 md:gap-20 items-center">
             <div class="space-y-6 md:space-y-8">
-                <div class="p-6 md:p-8 bg-white rounded-3xl shadow-sm border-r-8 border-blue-500 hover:shadow-md transition">
+                <div class="glass-card p-6 md:p-8 rounded-3xl border-r-8 border-blue-500" data-aos="fade-right" data-aos-delay="100">
                     <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
-                        <span class="font-black text-lg md:text-xl">الواجبات (حِلّهم كلهم)</span>
-                        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold text-sm">20 علامة</span>
+                        <span class="font-black text-lg md:text-2xl">الواجبات (حِلّهم كلهم)</span>
+                        <span class="bg-blue-100 text-blue-700 px-4 py-1 rounded-full font-bold text-sm shadow-inner">20 علامة</span>
                     </div>
                     <p class="text-slate-500 mb-4 text-sm">إذا بتفشق عن واجب، رح نزعل من بعض.</p>
                     <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="bg-blue-500 h-full w-[20%]"></div>
+                        <div class="bg-blue-500 h-full w-[20%] animate-[pulse_2s_infinite]"></div>
                     </div>
                 </div>
                 
-                <div class="p-6 md:p-8 bg-white rounded-3xl shadow-sm border-r-8 border-orange-500 hover:shadow-md transition">
+                <div class="glass-card p-6 md:p-8 rounded-3xl border-r-8 border-orange-500" data-aos="fade-right" data-aos-delay="200">
                     <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
-                        <span class="font-black text-lg md:text-xl">الحضور (80% ضروري)</span>
-                        <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-bold text-sm">40 علامة</span>
+                        <span class="font-black text-lg md:text-2xl">الحضور (80% ضروري)</span>
+                        <span class="bg-orange-100 text-orange-700 px-4 py-1 rounded-full font-bold text-sm shadow-inner">40 علامة</span>
                     </div>
                     <p class="text-slate-500 mb-4 text-sm">تغيبش كثير، احنا رح نكمل ومش رح نستناك!</p>
                     <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="bg-orange-500 h-full w-[40%]"></div>
+                        <div class="bg-orange-500 h-full w-[40%] animate-[pulse_2s_infinite]"></div>
                     </div>
                 </div>
 
-                <div class="p-6 md:p-8 bg-white rounded-3xl shadow-sm border-r-8 border-excel-green hover:shadow-md transition">
+                <div class="glass-card p-6 md:p-8 rounded-3xl border-r-8 border-excel-green" data-aos="fade-right" data-aos-delay="300">
                     <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
-                        <span class="font-black text-lg md:text-xl">الامتحان (المعركة النهائية)</span>
-                        <span class="bg-emerald-100 text-excel-green px-3 py-1 rounded-full font-bold text-sm">40 علامة</span>
+                        <span class="font-black text-lg md:text-2xl">الامتحان (المعركة النهائية)</span>
+                        <span class="bg-emerald-100 text-excel-green px-4 py-1 rounded-full font-bold text-sm shadow-inner">40 علامة</span>
                     </div>
                     <p class="text-slate-500 mb-4 text-sm">هون بتبين المعادن الحقيقية، شد حيلك.</p>
                     <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="bg-excel-green h-full w-[40%]"></div>
+                        <div class="bg-excel-green h-full w-[40%] animate-[pulse_2s_infinite]"></div>
                     </div>
                 </div>
             </div>
             
-            <div class="bg-white p-8 md:p-12 rounded-[3rem] md:rounded-[4rem] shadow-2xl border-4 border-dashed border-emerald-200 text-center relative overflow-hidden group">
-                <div class="absolute -top-10 -left-10 w-32 h-32 bg-yellow-400/20 rounded-full blur-3xl group-hover:bg-yellow-400/40 transition"></div>
-                <i data-lucide="medal" class="w-20 h-20 md:w-24 md:h-24 mx-auto mb-6 text-yellow-500 bounce-element"></i>
-                <h3 class="text-2xl md:text-3xl font-black mb-4">Certificate of Excellence</h3>
+            <div class="bg-white p-8 md:p-12 rounded-[3rem] md:rounded-[4rem] shadow-2xl border-4 border-dashed border-emerald-200 text-center relative overflow-hidden group hover:border-emerald-500 transition-colors duration-500" data-aos="zoom-in-left" data-aos-duration="1000">
+                <div class="absolute -top-10 -left-10 w-40 h-40 bg-yellow-400/20 rounded-full blur-3xl group-hover:bg-yellow-400/50 transition duration-700"></div>
+                <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-400/20 rounded-full blur-3xl group-hover:bg-emerald-400/50 transition duration-700"></div>
+                
+                <i data-lucide="medal" class="w-24 h-24 md:w-32 md:h-32 mx-auto mb-6 text-yellow-500 bounce-element drop-shadow-2xl"></i>
+                <h3 class="text-2xl md:text-3xl font-black mb-4 group-hover:scale-110 transition duration-300">Certificate of Excellence</h3>
                 <p class="text-slate-500 mb-8 text-base md:text-lg italic">"هاي الشهادة بس للناس اللي تعبت وصارت تفهمها وهي طايرة"</p>
-                <div class="inline-block px-8 py-4 md:px-10 md:py-5 bg-excel-green text-white rounded-2xl shadow-xl">
-                    <p class="text-xs md:text-sm uppercase opacity-80">المجموع اللازم</p>
-                    <p class="text-5xl md:text-6xl font-black italic">100</p>
+                <div class="inline-block px-8 py-4 md:px-12 md:py-6 bg-excel-green text-white rounded-3xl shadow-xl transform transition hover:scale-105 hover:rotate-2">
+                    <p class="text-xs md:text-sm uppercase opacity-80 tracking-widest">المجموع اللازم</p>
+                    <p class="text-5xl md:text-7xl font-black italic">100</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="bg-slate-900 text-white py-16 md:py-24">
-        <div class="max-w-7xl mx-auto px-4 md:px-6">
-            <h2 class="text-3xl md:text-4xl font-black text-center mb-10 md:mb-16">شو رح تطلع من هون؟ (بصراحة)</h2>
+    <section class="bg-slate-900 text-white py-16 md:py-32 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+        <div class="max-w-7xl mx-auto px-4 md:px-6 relative z-10">
+            <h2 class="text-3xl md:text-5xl font-black text-center mb-10 md:mb-20" data-aos="fade-down">شو رح تطلع من هون؟ (بصراحة)</h2>
             <div class="grid md:grid-cols-3 gap-6 md:gap-10">
-                <div class="p-6 md:p-8 rounded-3xl bg-white/5 border border-white/10 hover-lift">
-                    <i data-lucide="shield-check" class="w-10 h-10 md:w-12 md:h-12 text-emerald-400 mb-4 md:mb-6"></i>
-                    <h3 class="text-xl md:text-2xl font-bold mb-4">ثقة عمياء بالأساسيات</h3>
-                    <p class="text-slate-400">بدل ما تضل تسأل "هاي من وين أجت؟"، رح تصير أنت اللي بتوزع خبرة.</p>
+                <div class="p-8 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition duration-500 group" data-aos="fade-up" data-aos-delay="0">
+                    <div class="bg-emerald-500/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
+                        <i data-lucide="shield-check" class="w-8 h-8 md:w-10 md:h-10 text-emerald-400"></i>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-bold mb-4 group-hover:text-emerald-400 transition">ثقة عمياء بالأساسيات</h3>
+                    <p class="text-slate-400 leading-relaxed">بدل ما تضل تسأل "هاي من وين أجت؟"، رح تصير أنت اللي بتوزع خبرة وتجاوب الكل.</p>
                 </div>
-                <div class="p-6 md:p-8 rounded-3xl bg-white/5 border border-white/10 hover-lift text-center border-t-4 border-t-yellow-400">
-                    <i data-lucide="wand-2" class="w-10 h-10 md:w-12 md:h-12 text-yellow-400 mb-4 md:mb-6 mx-auto"></i>
-                    <h3 class="text-xl md:text-2xl font-bold mb-4">تصميم جداول "فخمة"</h3>
-                    <p class="text-slate-400">جدولك رح يكون مرتب ومنظم، مش بس أرقام فوق بعضها زي الحشوة.</p>
+                <div class="p-8 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition duration-500 group border-t-4 border-t-yellow-400 transform md:-translate-y-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="bg-yellow-500/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
+                         <i data-lucide="wand-2" class="w-8 h-8 md:w-10 md:h-10 text-yellow-400"></i>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-bold mb-4 group-hover:text-yellow-400 transition">تصميم جداول "فخمة"</h3>
+                    <p class="text-slate-400 leading-relaxed">جدولك رح يكون مرتب ومنظم، مش بس أرقام فوق بعضها. شغلك رح يصير يحكي عنك.</p>
                 </div>
-                <div class="p-6 md:p-8 rounded-3xl bg-white/5 border border-white/10 hover-lift text-left border-t-4 border-t-blue-400">
-                    <i data-lucide="pie-chart" class="w-10 h-10 md:w-12 md:h-12 text-blue-400 mb-4 md:mb-6"></i>
-                    <h3 class="text-xl md:text-2xl font-bold mb-4">تحليل بيانات "طقع"</h3>
-                    <p class="text-slate-400">مخططات وداشبورد بتخلي مديرك ينبهر فيك (وممكن يرفّعك).</p>
+                <div class="p-8 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition duration-500 group border-t-4 border-t-blue-400" data-aos="fade-up" data-aos-delay="400">
+                     <div class="bg-blue-500/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
+                        <i data-lucide="pie-chart" class="w-8 h-8 md:w-10 md:h-10 text-blue-400"></i>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-bold mb-4 group-hover:text-blue-400 transition">تحليل بيانات "طقع"</h3>
+                    <p class="text-slate-400 leading-relaxed">مخططات وداشبورد بتخلي مديرك ينبهر فيك (وممكن يرفّعك، مين بعرف؟).</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="stages" class="py-16 md:py-24 max-w-7xl mx-auto px-4 md:px-6 overflow-hidden">
-        <h2 class="text-3xl md:text-4xl font-black text-center mb-4 italic uppercase">خارطة طريق الإبداع</h2>
-        <p class="text-center text-slate-500 mb-12 md:mb-20 italic px-4">"دامجلك المحاور بالترتيب، عشان تبني عمارة صح لازم الأساس يكون حديد"</p>
+    <section id="stages" class="py-16 md:py-32 max-w-7xl mx-auto px-4 md:px-6 overflow-hidden bg-slate-50">
+        <h2 class="text-4xl md:text-6xl font-black text-center mb-6 italic uppercase text-slate-900" data-aos="zoom-in">خارطة طريق الإبداع</h2>
+        <p class="text-center text-slate-500 mb-16 md:mb-24 italic px-4 text-xl" data-aos="fade-up" data-aos-delay="100">"دامجلك المحاور بالترتيب، عشان تبني عمارة صح لازم الأساس يكون حديد"</p>
         
         <div class="relative timeline-container">
+            <div class="timeline-line"></div>
             
-            <div class="mb-12 md:mb-20 flex flex-col md:flex-row items-start w-full relative">
+            <div class="mb-12 md:mb-24 flex flex-col md:flex-row items-start w-full relative group">
                 <div class="md:w-1/2 flex justify-center md:justify-end md:pl-16 mb-6 md:mb-0 w-full pr-8 md:pr-0">
-                    <div class="glass-card p-6 md:p-8 rounded-3xl shadow-xl border-r-8 border-excel-green w-full max-w-lg hover-lift">
-                        <div class="flex items-center gap-3 mb-6 border-b border-emerald-100 pb-4">
-                            <span class="bg-excel-green text-white w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-black text-lg md:text-xl shadow-lg shrink-0">1</span>
+                    <div class="glass-card p-6 md:p-10 rounded-[2rem] shadow-xl border-r-8 border-excel-green w-full max-w-lg cursor-pointer" data-aos="fade-left" data-aos-duration="1000">
+                        <div class="flex items-center gap-4 mb-8 border-b border-emerald-100 pb-6">
+                            <span class="bg-excel-green text-white w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center font-black text-xl md:text-2xl shadow-lg shrink-0 group-hover:rotate-12 transition duration-300">1</span>
                             <div>
-                                <h3 class="text-xl md:text-2xl font-black text-excel-green italic">التأسيس الصح (الانطلاق)</h3>
-                                <span class="text-xs md:text-sm text-slate-500 font-bold">من الواجهة لحد ما ترتب بياناتك</span>
+                                <h3 class="text-2xl md:text-3xl font-black text-excel-green italic group-hover:scale-105 transition origin-right">التأسيس الصح</h3>
+                                <span class="text-sm md:text-base text-slate-500 font-bold">من الواجهة لحد ما ترتب بياناتك</span>
                             </div>
                         </div>
                         
                         <div class="space-y-6">
-                            <div>
-                                <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2 text-sm md:text-base">
-                                    <i data-lucide="monitor" class="w-4 h-4 text-emerald-600"></i>
+                            <div data-aos="fade-up" data-aos-delay="200">
+                                <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2 text-lg">
+                                    <i data-lucide="monitor" class="w-5 h-5 text-emerald-600"></i>
                                     البداية والواجهة
                                 </h4>
-                                <ul class="text-xs md:text-sm text-slate-600 space-y-2 pr-4 md:pr-6">
-                                    <li class="sub-topic-item">جولة في واجهة المستخدم (Interface) والأوامر.</li>
-                                    <li class="sub-topic-item">إنشاء وحفظ الملفات وإدخال البيانات صح.</li>
-                                    <li class="sub-topic-item">Kickoff Test: اختبار سريع نشوف المستوى.</li>
+                                <ul class="text-sm md:text-base text-slate-600 space-y-2 pr-4 md:pr-6">
+                                    <li class="sub-topic-item">جولة في واجهة المستخدم والأوامر.</li>
+                                    <li class="sub-topic-item">إنشاء وحفظ الملفات وإدخال البيانات.</li>
+                                    <li class="sub-topic-item font-bold text-emerald-700">Kickoff Test: اختبار تحديد مستوى.</li>
                                 </ul>
                             </div>
-
-                            <div>
-                                <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2 text-sm md:text-base">
-                                    <i data-lucide="scissors" class="w-4 h-4 text-emerald-600"></i>
-                                    التعديل والتنسيق (الشكل)
+                            <div data-aos="fade-up" data-aos-delay="300">
+                                <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2 text-lg">
+                                    <i data-lucide="scissors" class="w-5 h-5 text-emerald-600"></i>
+                                    التنسيق والترتيب
                                 </h4>
-                                <ul class="text-xs md:text-sm text-slate-600 space-y-2 pr-4 md:pr-6">
-                                    <li class="sub-topic-item">تنسيق النصوص، الأرقام، والستايلات (Formatting).</li>
-                                    <li class="sub-topic-item">التحكم بالأعمدة والصفوف (Insert/Delete).</li>
-                                    <li class="sub-topic-item">تجهيز الصفحة للطباعة (Layout & Printing).</li>
-                                </ul>
-                            </div>
-
-                            <div>
-                                <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2 text-sm md:text-base">
-                                    <i data-lucide="list-filter" class="w-4 h-4 text-emerald-600"></i>
-                                    إدارة القوائم
-                                </h4>
-                                <ul class="text-xs md:text-sm text-slate-600 space-y-2 pr-4 md:pr-6">
-                                    <li class="sub-topic-item">الفرز والتصفية (Sort & Filter).</li>
-                                    <li class="sub-topic-item">إدارة أوراق العمل (Worksheets Management).</li>
+                                <ul class="text-sm md:text-base text-slate-600 space-y-2 pr-4 md:pr-6">
+                                    <li class="sub-topic-item">تنسيق النصوص والأرقام والستايلات.</li>
+                                    <li class="sub-topic-item">تجهيز الصفحة للطباعة (Layout).</li>
                                 </ul>
                             </div>
                         </div>
-
                     </div>
                 </div>
-                <div class="absolute right-0 top-8 md:right-auto md:top-auto md:left-1/2 md:ml-[-20px] w-10 h-10 bg-white border-4 border-excel-green rounded-full shadow-xl z-10 flex items-center justify-center text-excel-green md:mt-8 translate-x-[50%] md:translate-x-0">
-                    <i data-lucide="star" class="w-5 h-5"></i>
+                <div class="absolute right-0 top-8 md:right-auto md:top-auto md:left-1/2 md:ml-[-24px] w-12 h-12 bg-white border-4 border-excel-green rounded-full shadow-2xl z-10 flex items-center justify-center text-excel-green md:mt-8 translate-x-[50%] md:translate-x-0 group-hover:scale-125 transition duration-300" data-aos="zoom-in">
+                    <i data-lucide="star" class="w-6 h-6 animate-spin-slow"></i>
                 </div>
                 <div class="md:w-1/2"></div>
             </div>
 
-            <div class="mb-12 md:mb-20 flex flex-col md:flex-row-reverse items-start w-full relative">
+            <div class="mb-12 md:mb-24 flex flex-col md:flex-row-reverse items-start w-full relative group">
                 <div class="md:w-1/2 flex justify-center md:justify-start md:pr-16 mb-6 md:mb-0 w-full pr-8 md:pr-0">
-                    <div class="glass-card p-6 md:p-8 rounded-3xl shadow-xl border-l-8 border-blue-600 w-full max-w-lg hover-lift">
-                        <div class="flex items-center gap-3 mb-6 border-b border-blue-100 pb-4">
-                            <span class="bg-blue-600 text-white w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-black text-lg md:text-xl shadow-lg shrink-0">2</span>
+                    <div class="glass-card p-6 md:p-10 rounded-[2rem] shadow-xl border-l-8 border-blue-600 w-full max-w-lg cursor-pointer" data-aos="fade-right" data-aos-duration="1000">
+                        <div class="flex items-center gap-4 mb-8 border-b border-blue-100 pb-6">
+                            <span class="bg-blue-600 text-white w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center font-black text-xl md:text-2xl shadow-lg shrink-0 group-hover:-rotate-12 transition duration-300">2</span>
                             <div>
-                                <h3 class="text-xl md:text-2xl font-black text-blue-600 italic">مخ الإكسل (المعادلات)</h3>
-                                <span class="text-xs md:text-sm text-slate-500 font-bold">هون الشغل الجد: دوال وتحليل</span>
+                                <h3 class="text-2xl md:text-3xl font-black text-blue-600 italic group-hover:scale-105 transition origin-right">مخ الإكسل (المعادلات)</h3>
+                                <span class="text-sm md:text-base text-slate-500 font-bold">هون الشغل الجد: دوال وتحليل</span>
                             </div>
                         </div>
 
                         <div class="space-y-6">
-                            <div>
-                                <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2 text-sm md:text-base">
-                                    <i data-lucide="calculator" class="w-4 h-4 text-blue-600"></i>
-                                    الحسابات والدوال
+                            <div data-aos="fade-up" data-aos-delay="200">
+                                <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2 text-lg">
+                                    <i data-lucide="calculator" class="w-5 h-5 text-blue-600"></i>
+                                    الدوال والحسابات
                                 </h4>
-                                <ul class="text-xs md:text-sm text-slate-600 space-y-2 pr-4 md:pr-6">
-                                    <li class="sub-topic-item">كتابة المعادلات اليدوية واستخدام الدوال الجاهزة.</li>
-                                    <li class="sub-topic-item">دوال المنطق (IF)، النصوص، والوقت.</li>
-                                    <li class="sub-topic-item">التعامل مع النطاقات (Ranges).</li>
+                                <ul class="text-sm md:text-base text-slate-600 space-y-2 pr-4 md:pr-6">
+                                    <li class="sub-topic-item">المعادلات اليدوية والدوال الجاهزة.</li>
+                                    <li class="sub-topic-item">IF الشرطية، دوال النصوص والوقت.</li>
                                 </ul>
                             </div>
-
-                            <div>
-                                <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2 text-sm md:text-base">
-                                    <i data-lucide="search" class="w-4 h-4 text-blue-600"></i>
-                                    البحث والربط (Advanced)
+                            <div data-aos="fade-up" data-aos-delay="300">
+                                <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2 text-lg">
+                                    <i data-lucide="search" class="w-5 h-5 text-blue-600"></i>
+                                    البحث والربط (Pro)
                                 </h4>
-                                <ul class="text-xs md:text-sm text-slate-600 space-y-2 pr-4 md:pr-6">
-                                    <li class="sub-topic-item">دوال البحث المشهورة (VLOOKUP, XLOOKUP).</li>
-                                    <li class="sub-topic-item">الربط بين الشيتات والملفات (Links).</li>
-                                    <li class="sub-topic-item">تتبع الأخطاء في المعادلات (Auditing).</li>
-                                </ul>
-                            </div>
-
-                            <div>
-                                <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2 text-sm md:text-base">
-                                    <i data-lucide="table" class="w-4 h-4 text-blue-600"></i>
-                                    تحليل البيانات وحمايتها
-                                </h4>
-                                <ul class="text-xs md:text-sm text-slate-600 space-y-2 pr-4 md:pr-6">
-                                    <li class="sub-topic-item">الجداول الذكية (Tables) والتنسيق الشرطي.</li>
-                                    <li class="sub-topic-item">حماية الملفات (Protection) ومشاركتها.</li>
+                                <ul class="text-sm md:text-base text-slate-600 space-y-2 pr-4 md:pr-6">
+                                    <li class="sub-topic-item font-bold text-blue-800">VLOOKUP & XLOOKUP.</li>
+                                    <li class="sub-topic-item">ربط الشيتات وكشف الأخطاء.</li>
                                 </ul>
                             </div>
                         </div>
-
                     </div>
                 </div>
-                <div class="absolute right-0 top-8 md:right-auto md:top-auto md:left-1/2 md:ml-[-20px] w-10 h-10 bg-white border-4 border-blue-600 rounded-full shadow-xl z-10 flex items-center justify-center text-blue-600 md:mt-8 translate-x-[50%] md:translate-x-0">
-                    <i data-lucide="activity" class="w-5 h-5"></i>
+                <div class="absolute right-0 top-8 md:right-auto md:top-auto md:left-1/2 md:ml-[-24px] w-12 h-12 bg-white border-4 border-blue-600 rounded-full shadow-2xl z-10 flex items-center justify-center text-blue-600 md:mt-8 translate-x-[50%] md:translate-x-0 group-hover:scale-125 transition duration-300" data-aos="zoom-in">
+                    <i data-lucide="activity" class="w-6 h-6"></i>
                 </div>
                 <div class="md:w-1/2"></div>
             </div>
 
-            <div class="flex flex-col md:flex-row items-start w-full relative">
+            <div class="flex flex-col md:flex-row items-start w-full relative group">
                 <div class="md:w-1/2 flex justify-center md:justify-end md:pl-16 mb-6 md:mb-0 w-full pr-8 md:pr-0">
-                    <div class="glass-card p-6 md:p-8 rounded-3xl shadow-xl border-r-8 border-purple-600 w-full max-w-lg hover-lift">
-                        <div class="flex items-center gap-3 mb-6 border-b border-purple-100 pb-4">
-                            <span class="bg-purple-600 text-white w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-black text-lg md:text-xl shadow-lg shrink-0">3</span>
+                    <div class="glass-card p-6 md:p-10 rounded-[2rem] shadow-xl border-r-8 border-purple-600 w-full max-w-lg cursor-pointer" data-aos="fade-left" data-aos-duration="1000">
+                        <div class="flex items-center gap-4 mb-8 border-b border-purple-100 pb-6">
+                            <span class="bg-purple-600 text-white w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center font-black text-xl md:text-2xl shadow-lg shrink-0 group-hover:rotate-12 transition duration-300">3</span>
                             <div>
-                                <h3 class="text-xl md:text-2xl font-black text-purple-600 italic">الهيبة (الداشبورد)</h3>
-                                <span class="text-xs md:text-sm text-slate-500 font-bold">اللعب الثقيل: تقارير تبهر المدير</span>
+                                <h3 class="text-2xl md:text-3xl font-black text-purple-600 italic group-hover:scale-105 transition origin-right">الهيبة (الداشبورد)</h3>
+                                <span class="text-sm md:text-base text-slate-500 font-bold">تقارير تبهر المدير وتجيب الترقية</span>
                             </div>
                         </div>
 
                         <div class="space-y-6">
-                            <div>
-                                <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2 text-sm md:text-base">
-                                    <i data-lucide="pie-chart" class="w-4 h-4 text-purple-600"></i>
-                                    الرسم والمخططات
+                             <div data-aos="fade-up" data-aos-delay="200">
+                                <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2 text-lg">
+                                    <i data-lucide="pie-chart" class="w-5 h-5 text-purple-600"></i>
+                                    المخططات والبيفوت
                                 </h4>
-                                <ul class="text-xs md:text-sm text-slate-600 space-y-2 pr-4 md:pr-6">
-                                    <li class="sub-topic-item">إنشاء وتعديل المخططات (Charts) باحترافية.</li>
-                                    <li class="sub-topic-item">استخدام أدوات الرسم المتقدمة.</li>
+                                <ul class="text-sm md:text-base text-slate-600 space-y-2 pr-4 md:pr-6">
+                                    <li class="sub-topic-item">تصميم Charts احترافية.</li>
+                                    <li class="sub-topic-item font-bold text-purple-800">Pivot Tables & Slicers.</li>
                                 </ul>
                             </div>
 
-                            <div>
-                                <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2 text-sm md:text-base">
-                                    <i data-lucide="bar-chart-2" class="w-4 h-4 text-purple-600"></i>
-                                    Pivot Tables (السحر)
-                                </h4>
-                                <ul class="text-xs md:text-sm text-slate-600 space-y-2 pr-4 md:pr-6">
-                                    <li class="sub-topic-item">إنشاء PivotTables وتحليل البيانات الضخمة.</li>
-                                    <li class="sub-topic-item">الـ Slicers والـ Timelines للفلترة الذكية.</li>
-                                </ul>
-                            </div>
-
-                            <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                                <h4 class="font-black text-purple-800 flex items-center gap-2 mb-2 text-sm md:text-base">
-                                    <i data-lucide="layout" class="w-4 h-4"></i>
+                            <div class="bg-purple-50 p-4 rounded-xl border border-purple-100 transform hover:scale-105 transition duration-300" data-aos="flip-up" data-aos-delay="400">
+                                <h4 class="font-black text-purple-800 flex items-center gap-2 mb-2 text-lg">
+                                    <i data-lucide="layout" class="w-5 h-5"></i>
                                     المشروع النهائي
                                 </h4>
-                                <ul class="text-xs md:text-sm text-purple-700 space-y-2 pr-4 md:pr-6 font-bold">
-                                    <li class="sub-topic-item">بناء Dashboard تفاعلي متكامل.</li>
-                                    <li class="sub-topic-item">التحقق من البيانات (Data Validation).</li>
-                                    <li class="sub-topic-item">الامتحان النهائي (Final Exam).</li>
+                                <ul class="text-sm md:text-base text-purple-700 space-y-2 pr-4 md:pr-6 font-bold">
+                                    <li class="sub-topic-item">بناء Dashboard تفاعلي كامل.</li>
+                                    <li class="sub-topic-item text-red-600">الامتحان النهائي (Final Exam).</li>
                                 </ul>
                             </div>
                         </div>
-
                     </div>
                 </div>
-                <div class="absolute right-0 top-8 md:right-auto md:top-auto md:left-1/2 md:ml-[-20px] w-10 h-10 bg-white border-4 border-purple-600 rounded-full shadow-xl z-10 flex items-center justify-center text-purple-600 md:mt-8 translate-x-[50%] md:translate-x-0">
-                    <i data-lucide="check" class="w-5 h-5"></i>
+                <div class="absolute right-0 top-8 md:right-auto md:top-auto md:left-1/2 md:ml-[-24px] w-12 h-12 bg-white border-4 border-purple-600 rounded-full shadow-2xl z-10 flex items-center justify-center text-purple-600 md:mt-8 translate-x-[50%] md:translate-x-0 group-hover:scale-125 transition duration-300" data-aos="zoom-in">
+                    <i data-lucide="check" class="w-6 h-6"></i>
                 </div>
                 <div class="md:w-1/2"></div>
             </div>
-
         </div>
     </section>
 
-    <section class="bg-white py-16 md:py-24 border-y border-slate-100">
+    <section class="bg-white py-16 md:py-32 border-y border-slate-100">
         <div class="max-w-7xl mx-auto px-4 md:px-6 text-center">
-            <h2 class="text-2xl md:text-3xl font-black mb-8 md:mb-12">شو رح يصير معك بعد ما تخلص؟</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-                <div class="group">
-                    <div class="w-14 h-14 md:w-16 md:h-16 bg-emerald-100 text-excel-green rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition">
-                        <i data-lucide="check-square"></i>
+            <h2 class="text-3xl md:text-5xl font-black mb-12 md:mb-20" data-aos="zoom-in-up">شو رح يصير معك بعد ما تخلص؟</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
+                <div class="group cursor-default" data-aos="fade-up" data-aos-delay="0">
+                    <div class="w-16 h-16 md:w-20 md:h-20 bg-emerald-100 text-excel-green rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:scale-125 group-hover:rotate-12 transition duration-500 shadow-lg">
+                        <i data-lucide="check-square" class="w-8 h-8 md:w-10 md:h-10"></i>
                     </div>
-                    <p class="font-bold text-sm md:text-base">رح تنظف بياناتك "زي الليرة"</p>
+                    <p class="font-bold text-base md:text-lg group-hover:text-excel-green transition">رح تنظف بياناتك "زي الليرة"</p>
                 </div>
-                <div class="group">
-                    <div class="w-14 h-14 md:w-16 md:h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition">
-                        <i data-lucide="settings"></i>
+                <div class="group cursor-default" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-16 h-16 md:w-20 md:h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:scale-125 group-hover:-rotate-12 transition duration-500 shadow-lg">
+                        <i data-lucide="settings" class="w-8 h-8 md:w-10 md:h-10 animate-spin-slow"></i>
                     </div>
-                    <p class="font-bold text-sm md:text-base">رح تأتمت شغلك وتريح راسك</p>
+                    <p class="font-bold text-base md:text-lg group-hover:text-blue-600 transition">رح تأتمت شغلك وتريح راسك</p>
                 </div>
-                <div class="group">
-                    <div class="w-14 h-14 md:w-16 md:h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition">
-                        <i data-lucide="lightbulb"></i>
+                <div class="group cursor-default" data-aos="fade-up" data-aos-delay="400">
+                    <div class="w-16 h-16 md:w-20 md:h-20 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:scale-125 transition duration-500 shadow-lg">
+                        <i data-lucide="lightbulb" class="w-8 h-8 md:w-10 md:h-10"></i>
                     </div>
-                    <p class="font-bold text-sm md:text-base">رح تفهم البيانات وهي طايرة</p>
+                    <p class="font-bold text-base md:text-lg group-hover:text-orange-600 transition">رح تفهم البيانات وهي طايرة</p>
                 </div>
-                <div class="group">
-                    <div class="w-14 h-14 md:w-16 md:h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition">
-                        <i data-lucide="zap"></i>
+                <div class="group cursor-default" data-aos="fade-up" data-aos-delay="600">
+                    <div class="w-16 h-16 md:w-20 md:h-20 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:scale-125 transition duration-500 shadow-lg">
+                        <i data-lucide="zap" class="w-8 h-8 md:w-10 md:h-10"></i>
                     </div>
-                    <p class="font-bold text-sm md:text-base">كفاءتك رح تزيد (مش مزح)</p>
+                    <p class="font-bold text-base md:text-lg group-hover:text-purple-600 transition">كفاءتك رح تزيد (مش مزح)</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="exam" class="py-16 md:py-24 text-center px-4 md:px-6">
-    <div class="max-w-4xl mx-auto bg-excel-gradient p-8 md:p-16 rounded-[2.5rem] md:rounded-[5rem] shadow-[0_20px_50px_rgba(33,115,70,0.3)] text-white relative">
+    <section id="exam" class="py-16 md:py-32 text-center px-4 md:px-6 overflow-hidden">
+        <div class="max-w-5xl mx-auto bg-excel-gradient p-8 md:p-20 rounded-[2.5rem] md:rounded-[5rem] shadow-[0_20px_50px_rgba(33,115,70,0.4)] text-white relative transform transition hover:scale-[1.02] duration-500" data-aos="zoom-in" data-aos-duration="1000">
 
-        <div class="absolute top-0 right-10 -mt-6 md:-mt-10 bg-yellow-400 text-slate-900 px-4 md:px-6 py-1 md:py-2 rounded-full font-black text-sm md:text-xl shadow-xl -rotate-6">
-            يلا همتك!
-        </div>
-
-        <h2 class="text-3xl md:text-5xl font-black mb-4 md:mb-8">يلا امتحان سريع!</h2>
-
-        <p class="text-lg md:text-2xl text-emerald-100 mb-8 md:mb-12 font-light italic">
-            "خلينا نشوف اذا انت قدها ولا بس كلام؟"
-        </p>
-
-        <a
-          href="https://forms.office.com/Pages/ResponsePage.aspx?id=SyRgi90bikmIZ5xypNlxoLcyptSSFVFFkP_cMNuBprZUNVdBWDBPWk5QRTdNT0k5WVYyQU0zQlBWNS4u&origin=QRCode"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="bg-white text-black text-lg md:text-2xl font-black px-8 py-4 md:px-12 md:py-6 rounded-2xl md:rounded-3xl hover:bg-emerald-50 hover:scale-105 transition-all shadow-2xl flex items-center justify-center gap-4 mx-auto border-b-8 border-emerald-200 w-full md:w-fit"
-        >
-            <i data-lucide="clipboard-list" class="w-6 h-6 md:w-8 md:h-8"></i>
-            بلش الاختبار التمهيدي هسا
-        </a>
-
-        <p class="mt-8 md:mt-10 text-emerald-200 font-bold tracking-widest uppercase text-xs md:text-base">
-            خلينا نشوف مين اشطر واحد
-        </p>
-
-    </div>
-</section>
-
-    <footer class="bg-slate-950 text-slate-500 py-12 md:py-16 px-4 md:px-6 border-t-8 border-excel-green text-center">
-    <div class="max-w-7xl mx-auto">
-
-        <div class="flex flex-col items-center gap-4 md:gap-6 mb-8 md:mb-10">
-            <div class="bg-excel-green p-2 rounded-xl text-white">
-                <i data-lucide="layout-grid" class="w-6 h-6 md:w-8 md:h-8"></i>
+            <div class="absolute top-0 right-10 -mt-6 md:-mt-10 bg-yellow-400 text-slate-900 px-6 md:px-8 py-2 md:py-3 rounded-full font-black text-sm md:text-xl shadow-2xl -rotate-6 animate-bounce">
+                يلا همتك!
             </div>
-            <p class="text-xl md:text-2xl font-black text-white">
-                برنامج باسل غانم لتدريب الاكسل
+
+            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+
+            <h2 class="text-3xl md:text-6xl font-black mb-6 md:mb-10 relative z-10" data-aos="fade-up">يلا امتحان سريع!</h2>
+
+            <p class="text-lg md:text-3xl text-emerald-100 mb-10 md:mb-16 font-light italic relative z-10" data-aos="fade-up" data-aos-delay="200">
+                "خلينا نشوف اذا انت قدها ولا بس كلام؟"
+            </p>
+
+            <a
+            href="https://forms.office.com/Pages/ResponsePage.aspx?id=SyRgi90bikmIZ5xypNlxoLcyptSSFVFFkP_cMNuBprZUNVdBWDBPWk5QRTdNT0k5WVYyQU0zQlBWNS4u&origin=QRCode"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="relative z-10 bg-white text-black text-lg md:text-3xl font-black px-10 py-5 md:px-16 md:py-8 rounded-full hover:bg-emerald-50 hover:scale-105 transition-all shadow-2xl flex items-center justify-center gap-4 mx-auto border-b-8 border-emerald-200 w-full md:w-fit group"
+            data-aos="zoom-in-up" data-aos-delay="400"
+            >
+                <i data-lucide="clipboard-list" class="w-8 h-8 md:w-10 md:h-10 group-hover:rotate-12 transition"></i>
+                <span>بلش الاختبار التمهيدي هسا</span>
+            </a>
+
+            <p class="mt-10 md:mt-12 text-emerald-200 font-bold tracking-[0.2em] uppercase text-xs md:text-base relative z-10 opacity-70">
+                خلينا نشوف مين اشطر واحد
+            </p>
+
+        </div>
+    </section>
+
+    <footer class="bg-slate-950 text-slate-500 py-12 md:py-20 px-4 md:px-6 border-t-8 border-excel-green text-center">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col items-center gap-4 md:gap-6 mb-8 md:mb-12" data-aos="fade-up">
+                <div class="bg-excel-green p-3 rounded-2xl text-white shadow-lg shadow-emerald-900/50">
+                    <i data-lucide="layout-grid" class="w-8 h-8 md:w-10 md:h-10"></i>
+                </div>
+                <p class="text-xl md:text-3xl font-black text-white">
+                    برنامج باسل غانم لتدريب الاكسل
+                </p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-8 md:gap-12 mb-8 md:mb-12 text-white font-bold text-lg">
+                <a href="https://www.facebook.com/basel.ghanem.757274" target="_blank" class="hover:text-emerald-400 transition transform hover:scale-110">فيسبوك</a>
+                <a href="https://www.linkedin.com/in/baselghanem/" target="_blank" class="hover:text-emerald-400 transition transform hover:scale-110">لينكد إن</a>
+                <a href="http://wa.me/962788458787" target="_blank" class="hover:text-emerald-400 transition transform hover:scale-110">واتساب</a>
+            </div>
+
+            <p class="text-xs md:text-sm opacity-50" data-aos="fade-up" data-aos-delay="200">
+                © 2025 - كل الحقوق محفوظة.  
+                اكس اكاديمي - عمان، الاردن.
             </p>
         </div>
-
-        <div class="flex flex-wrap justify-center gap-6 md:gap-10 mb-8 md:mb-10 text-white font-bold">
-            <a href="https://www.facebook.com/basel.ghanem.757274" target="_blank" class="hover:text-emerald-400 transition">فيسبوك</a>
-            <a href="https://www.linkedin.com/in/baselghanem/" target="_blank" class="hover:text-emerald-400 transition">لينكد إن</a>
-            <a href="http://wa.me/962788458787" target="_blank" class="hover:text-emerald-400 transition">واتساب</a>
-        </div>
-
-        <p class="text-xs md:text-sm opacity-50">
-            © 2025 - كل الحقوق محفوظة.  
-            اكس اكاديمي - عمان، الاردن.
-        </p>
-
-    </div>
-</footer>
+    </footer>
 
     <script>
+        // Initialize AOS Animation Library
+        AOS.init({
+            once: false, // Animation repeats when scrolling back up
+            mirror: true, // Animation repeats on scroll up
+            offset: 100, // Trigger offset
+            duration: 800, // Animation duration
+            easing: 'ease-out-cubic',
+        });
+
         // Initialize Lucide icons
         lucide.createIcons();
 
-        // Mobile Menu Toggle Logic
+        // Progress Bar Logic
+        window.onscroll = function() {
+            let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            let scrolled = (winScroll / height) * 100;
+            document.getElementById("progress-bar").style.width = scrolled + "%";
+        };
+
+        // Mobile Menu Logic
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const closeMenuBtn = document.getElementById('close-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
@@ -510,12 +555,11 @@
         mobileMenuBtn.addEventListener('click', toggleMenu);
         closeMenuBtn.addEventListener('click', toggleMenu);
 
-        // Close menu when a link is clicked
         mobileLinks.forEach(link => {
             link.addEventListener('click', toggleMenu);
         });
 
-        // Smooth scroll
+        // Smooth scroll adjustment for fixed header
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
